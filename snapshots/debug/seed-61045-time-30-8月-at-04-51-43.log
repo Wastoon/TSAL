@@ -1,0 +1,37 @@
+Main Function with logger : Logger(dir=snapshots/debug)
+Arguments : -------------------------------
+arg_flip         : False
+batch_size       : 8
+crop_height      : 256
+crop_perturb_max : 30
+crop_width       : 256
+data_indicator   : 300W-68
+error_bar        : None
+eval_ilists      : ['./cache_data/lists/300W/300w.test.full.DET']
+eval_once        : False
+eval_vlists      : None
+heatmap_type     : gaussian
+load_test_model  : None
+model_config     : ./configs/Detector.config
+num_pts          : 68
+opt_config       : ./configs/SGD.config
+pre_crop_expand  : 0.2
+print_freq       : 100
+pyramid_input    : True
+rand_seed        : 61045
+rotate_max       : 20
+save_path        : ./snapshots/debug
+scale_eval       : 1.0
+scale_max        : 1.1
+scale_min        : 0.9
+scale_prob       : 1.0
+sigma            : 4.0
+train_lists      : ['./cache_data/lists/300W/300w.train.DET']
+usefocalloss     : False
+usepca           : False
+workers          : 8
+Python  version : 3.6.7 | packaged by conda-forge | (default, Nov  6 2019, 16:19:42)  [GCC 7.3.0]
+Pillow  version : 7.0.0
+PyTorch version : 1.4.0
+cuDNN   version : 7603
+./configs/Detector.config
