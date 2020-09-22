@@ -1,1 +1,0 @@
-from .opt_utils import obtain_optimizer
