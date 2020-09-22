@@ -1,0 +1,349 @@
+Main Function with logger : Logger(dir=snapshots/debug)
+Arguments : -------------------------------
+arg_flip         : False
+batch_size       : 1
+crop_height      : 256
+crop_perturb_max : 30
+crop_width       : 256
+data_indicator   : 300W-68
+error_bar        : None
+eval_ilists      : ['/home/mry/PycharmProjects/SALD/cache_data/lists/300W/300w.test.challenge.DET']
+eval_once        : False
+eval_vlists      : None
+heatmap_type     : gaussian
+load_test_model  : None
+model_config     : ./configs/Detector.config
+num_pts          : 68
+opt_config       : ./configs/optimizer.config
+pre_crop_expand  : 0.2
+print_freq       : 100
+pyramid_input    : True
+rand_seed        : 50067
+rotate_max       : 20
+save_path        : ./snapshots/debug
+scale_eval       : 1.0
+scale_max        : 1.1
+scale_min        : 0.9
+scale_prob       : 1.0
+sigma            : 4.0
+train_lists      : ['/home/mry/PycharmProjects/SALD/cache_data/lists/300VW/300VW.test-1.lst.sparse.10']
+usefocalloss     : False
+usepca           : False
+workers          : 8
+Python  version : 3.6.7 | packaged by conda-forge | (default, Nov  6 2019, 16:19:42)  [GCC 7.3.0]
+Pillow  version : 7.0.0
+PyTorch version : 1.4.0
+cuDNN   version : 7603
+./configs/Detector.config
+Configure(arch='cpm_vgg16', stages=3, dilation=[1], pooling=[True, True, True], downsample=8, argmax=4, pretrained=[True])
+Real Sigma : 4.0
+configure : Configure(arch='cpm_vgg16', stages=3, dilation=[1], pooling=[True, True, True], downsample=8, argmax=4, pretrained=[True])
+=> network :
+ VGG16_base(
+  (features): Sequential(
+    (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU(inplace=True)
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (5): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (6): ReLU(inplace=True)
+    (7): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (8): ReLU(inplace=True)
+    (9): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (10): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (11): ReLU(inplace=True)
+    (12): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (13): ReLU(inplace=True)
+    (14): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (15): ReLU(inplace=True)
+    (16): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (17): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (18): ReLU(inplace=True)
+    (19): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (20): ReLU(inplace=True)
+    (21): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (22): ReLU(inplace=True)
+  )
+  (CPM_feature): Sequential(
+    (0): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU(inplace=True)
+  )
+  (stages): ModuleList(
+    (0): Sequential(
+      (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): ReLU(inplace=True)
+      (2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (3): ReLU(inplace=True)
+      (4): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (5): ReLU(inplace=True)
+      (6): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (7): ReLU(inplace=True)
+      (8): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1))
+      (9): ReLU(inplace=True)
+      (10): Conv2d(512, 69, kernel_size=(1, 1), stride=(1, 1))
+    )
+    (1): Sequential(
+      (0): Conv2d(197, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3))
+      (1): ReLU(inplace=True)
+      (2): Conv2d(128, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3))
+      (3): ReLU(inplace=True)
+      (4): Conv2d(128, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3))
+      (5): ReLU(inplace=True)
+      (6): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (7): ReLU(inplace=True)
+      (8): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (9): ReLU(inplace=True)
+      (10): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (11): ReLU(inplace=True)
+      (12): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (13): ReLU(inplace=True)
+      (14): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+      (15): ReLU(inplace=True)
+      (16): Conv2d(128, 69, kernel_size=(1, 1), stride=(1, 1))
+    )
+    (2): Sequential(
+      (0): Conv2d(197, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3))
+      (1): ReLU(inplace=True)
+      (2): Conv2d(128, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3))
+      (3): ReLU(inplace=True)
+      (4): Conv2d(128, 128, kernel_size=(7, 7), stride=(1, 1), padding=(3, 3))
+      (5): ReLU(inplace=True)
+      (6): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (7): ReLU(inplace=True)
+      (8): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (9): ReLU(inplace=True)
+      (10): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (11): ReLU(inplace=True)
+      (12): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (13): ReLU(inplace=True)
+      (14): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+      (15): ReLU(inplace=True)
+      (16): Conv2d(128, 69, kernel_size=(1, 1), stride=(1, 1))
+    )
+  )
+  (layer3_forhm): Sequential(
+    (0): Bottleneck(
+      (conv1): Conv2d(128, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+      (downsample): Sequential(
+        (0): Conv2d(128, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (1): Bottleneck(
+      (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+    )
+    (2): Bottleneck(
+      (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+    )
+    (3): Bottleneck(
+      (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+    )
+    (4): Bottleneck(
+      (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+    )
+    (5): Bottleneck(
+      (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+    )
+  )
+  (layer4_forhm): Sequential(
+    (0): Bottleneck(
+      (conv1): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+      (downsample): Sequential(
+        (0): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (1): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (1): Bottleneck(
+      (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+    )
+    (2): Bottleneck(
+      (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (relu): ReLU(inplace=True)
+    )
+  )
+  (deconv_layers_forhm): Sequential(
+    (0): ConvTranspose2d(2048, 256, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+    (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): ConvTranspose2d(256, 256, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+    (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): ConvTranspose2d(256, 256, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1), bias=False)
+    (7): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (8): ReLU(inplace=True)
+  )
+  (hm): Sequential(
+    (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(128, 1, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (hmhp_offset): Sequential(
+    (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): Conv2d(128, 136, kernel_size=(1, 1), stride=(1, 1))
+  )
+)
+Training-data : GeneralDataset(point-num=68, sigma=4.0, heatmap_type=gaussian, length=6260, dataset=300W-68)
+The [ 0/ 1]-th testing-data [image] = GeneralDataset(point-num=68, sigma=4.0, heatmap_type=gaussian, length=1350, dataset=300W-68)
+arguments : Namespace(arg_flip=False, batch_size=1, crop_height=256, crop_perturb_max=30, crop_width=256, data_indicator='300W-68', error_bar=None, eval_ilists=['/home/mry/PycharmProjects/SALD/cache_data/lists/300W/300w.test.challenge.DET'], eval_once=False, eval_vlists=None, heatmap_type='gaussian', load_test_model=None, model_config='./configs/Detector.config', num_pts=68, opt_config='./configs/optimizer.config', pre_crop_expand=0.2, print_freq=100, pyramid_input=True, rand_seed=50067, rotate_max=20, save_path='./snapshots/debug', scale_eval=1.0, scale_max=1.1, scale_min=0.9, scale_prob=1.0, sigma=4.0, train_lists=['/home/mry/PycharmProjects/SALD/cache_data/lists/300VW/300VW.test-1.lst.sparse.10'], usefocalloss=False, usepca=False, workers=8)
+./configs/optimizer.config
+Configure(optimizer='Adam', LR=5e-05, momentum=0.9, Decay=0.0005, nesterov=True, criterion='MSE-none', loss_norm=True, lossnorm=True, epochs=150, schedule=[90, 110, 130], gamma=0.5, stages=1)
+Optimizer : Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 5e-05
+    lr: 5e-05
+    weight_decay: 0
+), MSE Loss with size-average=False
+Optimizer : Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 5e-05
+    lr: 5e-05
+    weight_decay: 0.0005
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0001
+    lr: 0.0001
+    weight_decay: 0
+
+Parameter Group 2
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 5e-05
+    lr: 5e-05
+    weight_decay: 0.0005
+
+Parameter Group 3
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0001
+    lr: 0.0001
+    weight_decay: 0
+
+Parameter Group 4
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0002
+    lr: 0.0002
+    weight_decay: 0.0005
+
+Parameter Group 5
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0004
+    lr: 0.0004
+    weight_decay: 0
+
+Parameter Group 6
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0002
+    lr: 0.0002
+    weight_decay: 0.0005
+
+Parameter Group 7
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0004
+    lr: 0.0004
+    weight_decay: 0
+
+Parameter Group 8
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0002
+    lr: 0.0002
+    weight_decay: 0.0005
+
+Parameter Group 9
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    initial_lr: 0.0004
+    lr: 0.0004
+    weight_decay: 0
+), MSE Loss with size-average=False
+criterion : MSELoss()
+=> do not find the last-info file : snapshots/debug/last-info_real.pth
+
+==>>[2020-08-30 12:36:37] [epoch-000-150], [[Time Left: 00:00:00]], LR : [0.00005 ~ 0.00040], Config : Configure(optimizer='Adam', LR=5e-05, momentum=0.9, Decay=0.0005, nesterov=True, criterion='MSE-none', loss_norm=True, lossnorm=True, epochs=150, schedule=[90, 110, 130], gamma=0.5, stages=1)
+ -->>[Train]: [epoch-000-150][000/6260] Time 28.77 (28.77) Data 20.74 (20.74) Forward 23.63 (23.63) Loss 1716.6282 (1716.6282)  [Time Left: 50:01:14] : L1=479.4300 : L2=479.4101 : L3=479.4118 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 67 (67.6)Loss_SIC:141.8893 ,Loss_noseHM 29.1556, Loss_Loc 107.3315Loss_motion     nan
+ -->>[Train]: [epoch-000-150][001/6260] Time 3.81 (16.29) Data 3.54 (12.14) Forward 3.64 (13.64) Loss 1656.2095 (1686.4188)  [Time Left: 28:18:50] : L1=478.8584 : L2=479.3871 : L3=479.4802 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 68 (67.8)Loss_SIC:88.1877 ,Loss_noseHM 29.1802, Loss_Loc 101.1160Loss_motion     nan
+ -->>[Train]: [epoch-000-150][002/6260] Time 3.60 (12.06) Data 3.36 (9.21) Forward 3.45 (10.24) Loss 1669.5626 (1680.8001)  [Time Left: 20:57:37] : L1=487.5120 : L2=488.0889 : L3=488.7275 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 65 (67.0)Loss_SIC:85.6031 ,Loss_noseHM 29.1165, Loss_Loc 90.5146Loss_motion     nan
+ -->>[Train]: [epoch-000-150][003/6260] Time 3.47 (9.91) Data 3.23 (7.72) Forward 3.32 (8.51) Loss 1767.5007 (1702.4753)  [Time Left: 17:13:37] : L1=488.4641 : L2=486.7124 : L3=489.9795 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 66 (67.0)Loss_SIC:157.2424 ,Loss_noseHM 29.1943, Loss_Loc 115.9079Loss_motion     nan
+ -->>[Train]: [epoch-000-150][004/6260] Time 3.53 (8.64) Data 3.28 (6.83) Forward 3.37 (7.48) Loss 1722.4435 (1706.4689)  [Time Left: 15:00:17] : L1=473.4791 : L2=460.3943 : L3=473.4935 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 67 (67.2)Loss_SIC:181.6149 ,Loss_noseHM 29.1610, Loss_Loc 104.3007Loss_motion     nan
+ -->>[Train]: [epoch-000-150][005/6260] Time 3.48 (7.78) Data 3.23 (6.23) Forward 3.33 (6.79) Loss 1569.0929 (1683.5729)  [Time Left: 13:30:35] : L1=471.1676 : L2=414.9964 : L3=461.3837 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 67 (67.2)Loss_SIC:86.0112 ,Loss_noseHM 29.1379, Loss_Loc 106.3958Loss_motion     nan
+ -->>[Train]: [epoch-000-150][006/6260] Time 3.54 (7.17) Data 3.29 (5.81) Forward 3.38 (6.30) Loss 1496.8204 (1656.8940)  [Time Left: 12:27:21] : L1=471.0680 : L2=340.5750 : L3=432.2812 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 67 (67.3)Loss_SIC:104.5042 ,Loss_noseHM 29.1519, Loss_Loc 119.2400Loss_motion     nan
+ -->>[Train]: [epoch-000-150][007/6260] Time 3.51 (6.71) Data 3.26 (5.49) Forward 3.35 (5.93) Loss 1536.5038 (1641.8452)  [Time Left: 11:39:31] : L1=451.1060 : L2=465.9719 : L3=332.1775 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 67 (67.3)Loss_SIC:156.0543 ,Loss_noseHM 29.1894, Loss_Loc 102.0049Loss_motion     nan
+ -->>[Train]: [epoch-000-150][008/6260] Time 3.50 (6.36) Data 3.25 (5.24) Forward 3.34 (5.65) Loss 1214.8765 (1594.4042)  [Time Left: 11:02:12] : L1=439.6980 : L2=262.5041 : L3=272.0318 In=[10, 3, 256, 256] Tar=[10, 69, 32, 32] Vis-PTS : 68 (67.4)Loss_SIC:112.6150 ,Loss_noseHM 29.1633, Loss_Loc 98.8642Loss_motion     nan
