@@ -19,7 +19,7 @@ lib_dir = (Path(__file__).parent / '..' / 'lib').resolve()
 if str(lib_dir) not in sys.path: sys.path.insert(0, str(lib_dir))
 assert sys.version_info.major == 3, 'Please upgrade from {:} to Python 3.x'.format(sys.version_info)
 from config_utils import obtain_basic_args
-from procedure import prepare_seed, save_checkpoint, basic_train as train, basic_eval_all as eval_all
+from procedure import prepare_seed, save_checkpoint, basic_train as train, basic_train_Rma_model as train_Rma, basic_eval_all as eval_all
 from datasets import GeneralDataset as Dataset
 from xvision import transforms
 from log_utils import Logger, AverageMeter, time_for_file, convert_secs2time, time_string
@@ -270,7 +270,8 @@ def main(args):
                                                                                             max(LRs), opt_config))
 
         # train for one epoch
-        train_loss, Student_train_loss = train(args, train_loader, net, MFEM, criterion, optimizer, optimizer_MFEM, epoch_str, logger, opt_config)
+        #train_loss, Student_train_loss = train(args, train_loader, net, MFEM, criterion, optimizer, optimizer_MFEM, epoch_str, logger, opt_config)
+        train_loss, Student_train_loss = train_Rma(args, train_loader, net, MFEM, student_net, MFEM_student, criterion, Student_criterion,  optimizer, Student_optimizer, optimizer_MFEM, Student_optimizer_MFEM, epoch_str, logger, opt_config)
         # log the results
         logger.log(
             '==>>{:s} TeacherTrain [{:}] Average Loss = {:.6f}, StudentTrain [{:}] Average Loss = {:.6f}'.format(time_string(),

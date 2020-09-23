@@ -152,7 +152,7 @@ class GeneralDataset(data.Dataset):
         print('[GeneralDataset] load-data {:} datas begin'.format(len(datas)))
 
         for idx, batch_data in enumerate(datas):
-            assert isinstance(data, str), 'The type of data is not correct : {}'.format(data)
+            #assert isinstance(data, str), 'The type of data is not correct : {}'.format(data)
             self.append(datas[idx], labels[idx], boxes[idx], face_sizes[idx])
 
         assert len(self.datas) == self.length, 'The length and the data is not right {} vs {}'.format(self.length,

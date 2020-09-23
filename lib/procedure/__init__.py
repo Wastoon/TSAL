@@ -9,3 +9,4 @@ from .basic_main import basic_train
 from .saver import save_checkpoint
 from .basic_eval import basic_eval_all
 from .losses import compute_stage_loss_MFDS
+from .basic_main import basic_train_Rma_model

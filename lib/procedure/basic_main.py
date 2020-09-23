@@ -83,7 +83,7 @@ def basic_train(args, loader, net, MFEM, criterion, optimizer, optimizer_MFEM, e
                flows = [torch.cat([flo12, flo21], 1) for flo12, flo21 in zip(flows_12, flows_21)]
                cfg = EasyDict(json.load(open('/home/mry/PycharmProjects/SALD/configs/MFDS.json')))
                cfg = cfg.loss
-               loss_func = unFlowLoss(cfg)
+               loss_func = unFlowLoss(cfg, net)
                loss_interframe, l_ph, l_sm, flow_mean, FW_consistency_loss, BW_consistency_loss, unsupervisied_target_by_tracking = loss_func(flows, inputs[:,i*3:i*3+6,:,:])
                tracking_source_reconsimg_list.append(unsupervisied_target_by_tracking)
                loss_MFEM += loss_interframe
