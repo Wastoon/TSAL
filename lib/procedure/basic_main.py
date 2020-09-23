@@ -208,6 +208,10 @@ def basic_train(args, loader, net, MFEM, criterion, optimizer, optimizer_MFEM, e
         np_batch_locs, np_batch_scos = batch_locs.detach().to(cpu).numpy(), batch_scos.detach().to(cpu).numpy()
         cropped_size = cropped_size.numpy()
         # evaluate the training data
+        for ibatch, (imgidx, nopoint) in enumerate(zip(image_index, nopoints)):
+            if nopoint == 1: continue
+            locations, scores = np_batch_locs[ibatch, :-1, :], np.expand_dims(np_batch_scos[ibatch, :-1], -1)
+        xpoints = loader.dataset.labels[imgidx].get_points()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -517,8 +521,30 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         eval_time.update(time.time() - end)
 
         np_batch_locs, np_batch_scos = batch_locs.detach().to(cpu).numpy(), batch_scos.detach().to(cpu).numpy()
+        #cropped_size = cropped_size.view(seq_length, -1)
         cropped_size = cropped_size.numpy()
         # evaluate the training data
+        #image_index = image_index.view(-1)
+        #nopoints = nopoints.view(-1)
+        for ibatch, (imgidx, nopoint) in enumerate(zip(image_index, nopoints)):
+            for seq_i in range(seq_length):
+                if nopoint[seq_i]==1: continue
+                locations, scores = np_batch_locs[ibatch*seq_length + seq_i, :-1, :], np.expand_dims(np_batch_scos[ibatch*seq_length + seq_i, :-1], -1)
+                xpoints = loader.dataset.labels[imgidx[seq_i]][seq_i].get_points()
+                assert cropped_size[ibatch, 0+seq_i*4] > 0 and cropped_size[
+                    ibatch, 1+seq_i*4] > 0, 'The ibatch={:}, imgidx={:} is not right.'.format(ibatch, imgidx[seq_i],
+                                                                                      cropped_size[ibatch])
+                scale_h, scale_w = cropped_size[ibatch, 0+seq_i*4] * 1. / inputs.size(-2), cropped_size[
+                    ibatch, 1+seq_i*4] * 1. / inputs.size(-1)
+                locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[ibatch, 2+seq_i*4], locations[:, 1] * scale_h + cropped_size[ibatch, 3+seq_i*4]
+                assert xpoints.shape[1] == num_pts and locations.shape[0] == num_pts and scores.shape[
+                    0] == num_pts, 'The number of points is {} vs {} vs {} vs {}'.format(num_pts, xpoints.shape,
+                                                                                         locations.shape, scores.shape)
+                # recover the original resolution
+                prediction = np.concatenate((locations, scores), axis=1).transpose(1, 0)
+                image_path = loader.dataset.datas[imgidx[seq_i]]
+                face_size = loader.dataset.face_sizes[imgidx[seq_i]]
+                eval_meta.append(prediction, xpoints, image_path, face_size)
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -556,5 +582,5 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
                    + 'Loss_unsupervised_tracking_target {loss_unsupervised_tracking_target:7.4f}'.format(loss_unsupervised_tracking_target=Unsupervisied_total_loss_Rma)
                    )
 
-    #nme, _, _ = eval_meta.compute_mse(logger)
+    nme, _, _ = eval_meta.compute_mse(logger)
     return losses.avg, losses_Rma.avg#, nme

@@ -152,10 +152,8 @@ class GeneralDataset(data.Dataset):
         print('[GeneralDataset] load-data {:} datas begin'.format(len(datas)))
 
         for idx, batch_data in enumerate(datas):
-            for batch_idx, data in enumerate(batch_data):
-                assert isinstance(data, str), 'The type of data is not correct : {}'.format(data)
-                assert osp.isfile(datas[idx][batch_idx]), '{} is not a file'.format(datas[idx])
-                self.append(datas[idx], labels[idx], boxes[idx], face_sizes[idx])
+            assert isinstance(data, str), 'The type of data is not correct : {}'.format(data)
+            self.append(datas[idx], labels[idx], boxes[idx], face_sizes[idx])
 
         assert len(self.datas) == self.length, 'The length and the data is not right {} vs {}'.format(self.length,
                                                                                                       len(self.datas))
@@ -165,6 +163,7 @@ class GeneralDataset(data.Dataset):
         assert len(self.face_sizes) == self.length, 'The length and the face_sizes is not right {} vs {}'.format(
             self.length, len(self.face_sizes))
         print('Load data done for the general dataset, which has {} images.'.format(self.length))
+
 
     def load_list(self, file_lists, num_pts, reset):
         lists = load_file_lists(file_lists)
