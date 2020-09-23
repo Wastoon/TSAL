@@ -49,7 +49,7 @@ def obtain_args():
   #multi scale inputs
   parser.add_argument('--pyramid_input',        type=bool,   default=True         ,       help='manual seed')
   #Teacher Student update
-  parser.add_argument('--Rma_model', type=bool, default=False, help='whether or not use Rma model')
+  parser.add_argument('--Rma_model', type=bool, default=True, help='whether or not use Rma model')
   args = parser.parse_args()
 
   if args.rand_seed is None:

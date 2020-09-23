@@ -30,8 +30,8 @@ def compute_stage_loss_unsupervised(criterion, targets, outputs, seq_length):
   assert isinstance(outputs, list), 'The ouputs type is wrong : {:}'.format(type(outputs))
   total_loss = 0
   each_stage_loss = []
-  video_batch_num = outputs.shape[0] // seq_length
-  calculate_loss_id = torch.tensor([j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)])
+  video_batch_num = outputs[0].shape[0] // seq_length
+  calculate_loss_id = torch.tensor([j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)]).cuda()
 
   for out, tar in zip(outputs, targets):
     stage_loss = 0
@@ -39,14 +39,14 @@ def compute_stage_loss_unsupervised(criterion, targets, outputs, seq_length):
     stage_loss = criterion(out, tar)
     total_loss = total_loss + stage_loss
     each_stage_loss.append(stage_loss.item())
-  return total_loss, stage_loss
+  return total_loss, each_stage_loss
 
 def compute_stage_loss_unsupervised_Loc(criterion, targets, outputs, seq_length):
-  assert isinstance(outputs, list), 'The ouputs type is wrong : {:}'.format(type(outputs))
+  #assert isinstance(outputs, list), 'The ouputs type is wrong : {:}'.format(type(outputs))
   total_loss = 0
 
   video_batch_num = outputs.shape[0] // seq_length
-  calculate_loss_id = torch.tensor([j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)])
+  calculate_loss_id = torch.tensor([j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)]).cuda()
 
   outputs = outputs.index_select(0, calculate_loss_id)
   total_loss = criterion(outputs, targets)

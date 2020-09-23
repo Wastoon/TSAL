@@ -93,7 +93,7 @@ def basic_train(args, loader, net, MFEM, criterion, optimizer, optimizer_MFEM, e
             weight = 1e-3
             scaled_loss = scaled_loss * weight
             MFDS_consistency_loss = weight_decay_unsupervisied*MFDS_consistency_loss
-            MFEM_total_loss = MFDS_consistency_loss + scaled_loss
+            MFEM_total_loss = MFDS_consistency_loss #+ scaled_loss
             MFEM_total_loss.backward()
             for param in [p for p in MFEM.parameters() if p.requires_grad]:
                param.grad.data.mul_(1. / 1024)
@@ -140,7 +140,7 @@ def basic_train(args, loader, net, MFEM, criterion, optimizer, optimizer_MFEM, e
 
         batch_heatmaps, batch_locs, batch_scos, CLOR_dict = net(inputs)
 
-        with torch.no_grad:
+        with torch.no_grad():
             Unsupervisied_traget_batch_heatmaps, Unsupervisied_traget_batch_locs, Unsupervisied_traget_batch__scos, Unsupervisied_traget_CLOR_dict = net(input_from_tracking)
 
         #Loss for nose center of face
@@ -273,14 +273,14 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
                flows = [torch.cat([flo12, flo21], 1) for flo12, flo21 in zip(flows_12, flows_21)]
                cfg = EasyDict(json.load(open('/home/mry/PycharmProjects/SALD/configs/MFDS.json')))
                cfg = cfg.loss
-               loss_func = unFlowLoss(cfg)
+               loss_func = unFlowLoss(cfg, net)
                loss_interframe, l_ph, l_sm, flow_mean, FW_consistency_loss, BW_consistency_loss, unsupervisied_target_by_tracking = loss_func(flows, inputs[:,i*3:i*3+6,:,:])
                tracking_source_reconsimg_list.append(unsupervisied_target_by_tracking)
                loss_MFEM += loss_interframe
                MFDS_consistency_loss += FW_consistency_loss + BW_consistency_loss
             optimizer_MFEM.zero_grad()
             scaled_loss = 1024. * loss_MFEM
-            weight = 1e-3
+            weight = 1e-6
             scaled_loss = scaled_loss * weight
             MFDS_consistency_loss = weight_decay_unsupervisied*MFDS_consistency_loss
             MFEM_total_loss = MFDS_consistency_loss + scaled_loss
@@ -297,14 +297,14 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
                flows = [torch.cat([flo12, flo21], 1) for flo12, flo21 in zip(flows_12, flows_21)]
                cfg = EasyDict(json.load(open('/home/mry/PycharmProjects/SALD/configs/MFDS.json')))
                cfg = cfg.loss
-               loss_func = unFlowLoss(cfg)
+               loss_func = unFlowLoss(cfg, net_Rma)
                loss_interframe_Rma, l_ph_Rma, l_sm_Rma, flow_mean_Rma, FW_consistency_loss_Rma, BW_consistency_loss_Rma, unsupervisied_target_by_tracking_Rma = loss_func(flows, inputs[:,i*3:i*3+6,:,:])
                tracking_source_reconsimg_Rma_list.append(unsupervisied_target_by_tracking_Rma)
                loss_MFEM_Rma += loss_interframe_Rma
                MFDS_consistency_loss_Rma += FW_consistency_loss_Rma + BW_consistency_loss_Rma
             optimizer_MFEM_Rma.zero_grad()
             scaled_loss_Rma = 1024. * loss_MFEM_Rma
-            weight = 1e-3
+            weight = 1e-6
             scaled_loss_Rma = scaled_loss_Rma * weight
             MFDS_consistency_loss_Rma = weight_decay_unsupervisied*MFDS_consistency_loss_Rma
             MFEM_total_loss_Rma = MFDS_consistency_loss_Rma + scaled_loss_Rma
@@ -314,6 +314,12 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
             optimizer_MFEM_Rma.step()
 
         # switch to train mode
+        for p in net.parameters():
+            p.requires_grad = True
+
+        for p in net_Rma.parameters():
+            p.requires_grad = True
+        
         net.train()
         criterion.train()
         net_Rma.train()
@@ -358,9 +364,8 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
 
         batch_heatmaps, batch_locs, batch_scos, CLOR_dict = net(inputs)
         batch_heatmaps_Rma, batch_locs_Rma, batch_scos_Rma, CLOR_dict_Rma = net_Rma(inputs)
-
-
-        with torch.no_grad:
+  
+        with torch.no_grad():
             Unsupervisied_traget_batch_heatmaps, Unsupervisied_traget_batch_locs, Unsupervisied_traget_batch__scos, Unsupervisied_traget_CLOR_dict = net(input_from_tracking)
             Unsupervisied_traget_batch_heatmaps_Rma, Unsupervisied_traget_batch_locs_Rma, Unsupervisied_traget_batch_scos_Rma, Unsupervisied_traget_CLOR_dict_Rma = net_Rma(
                 input_from_tracking_Rma)
@@ -431,12 +436,14 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         Unsupervisied_total_loss = weight_decay_unsupervisied * Unsupervisied_total_loss
 
 
+
         ##Unsupervised_img_loss_of student
         #1. tracking source info parse----have got batch x 68 x 2
-        video_batch_num = Unsupervisied_traget_batch_locs_Rma.shape[0] // seq_length
-        calculate_loss_id = torch.tensor(
-            [j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)])
-        Unsupervisied_traget_batch_locs_Rma  = Unsupervisied_traget_batch_locs_Rma.index_select(0, calculate_loss_id)  ##(seq_length-1)*9 num_points 2---> 72 x 68 x 2
+        Unsupervisied_traget_batch_locs_Rma = Unsupervisied_traget_batch_locs_Rma[:,:-1,:]
+        video_batch_num = Unsupervisied_traget_batch_locs_Rma.shape[0] // (seq_length-1)
+        #calculate_loss_id = torch.tensor(
+        #    [j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)]).cuda()
+        #Unsupervisied_traget_batch_locs_Rma  = torch.index_select(Unsupervisied_traget_batch_locs_Rma, 0, calculate_loss_id)  ##(seq_length-1)*9 num_points 2---> 72 x 68 x 2
         Unsupervisied_traget_batch_locs_Rma = Unsupervisied_traget_batch_locs_Rma.unsqueeze(1).view(Unsupervisied_traget_batch_locs_Rma.shape[0], 1, -1) #---> 72 x 1 x 136
 
         #2. detection source nose heatmap parse && detection source results combine(center and offset)
@@ -450,8 +457,11 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         detection_target_id = []
         for page_id, offset in enumerate(unsupervisied_img_targets_id):
             detection_target_id.append(page_id * K + offset.item())
-        detection_target_id = torch.LongTensor(detection_target_id)
+        detection_target_id = torch.LongTensor(detection_target_id).cuda()
         unsupervisied_target_by_detection = unsupervisied_target_by_detection.view(-1, unsupervisied_target_by_detection.shape[2]).index_select(0, detection_target_id) ## 72 x 136
+
+
+  
 
         #3. student unsupervisied signal fuse
         Unsupervisied_traget_batch_locs_Rma = Unsupervisied_traget_batch_locs_Rma.squeeze()
@@ -459,6 +469,7 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         Unsupervisied_traget_batch_locs_Rma = mu_weight * Unsupervisied_traget_batch_locs_Rma +(1-mu_weight)*unsupervisied_target_by_detection
 
         #5. student unsupervisied loss calculate
+        batch_locs_Rma = batch_locs_Rma[:,:-1,:]
         Unsupervisied_total_loss_Rma = compute_stage_loss_unsupervised_Loc(Uncupervised_criterion,
                                                                            Unsupervisied_traget_batch_locs_Rma,
                                                                            batch_locs_Rma.view(batch_locs_Rma.shape[0], -1), seq_length)
@@ -470,6 +481,7 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         else:
             pass
         # fake_mask = FC_MIL.detach().clone().unsqueeze(2).unsqueeze(3)
+
         loss = 0
         loss, each_stage_loss_value = compute_stage_loss(criterion, target, batch_heatmaps, fake_mask)
 
@@ -477,16 +489,11 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         loss_Rma, each_stage_loss_value_Rma = compute_stage_loss(criterion_Rma, target, batch_heatmaps_Rma, fake_mask)
 
         if opt_config.lossnorm:
-            loss, each_stage_loss_value = loss / annotated_num / 2, [x / annotated_num / 2 for x in
-                                                                         each_stage_loss_value]
-            Unsupervisied_total_loss, Unsupervisied_stage_loss = Unsupervisied_total_loss / annotated_num / 2, [x / annotated_num / 2 for x in
-                                                                     Unsupervisied_stage_loss]
+            loss, each_stage_loss_value = loss / annotated_num / 2, [x / annotated_num / 2 for x in each_stage_loss_value]
+            Unsupervisied_total_loss, Unsupervisied_stage_loss = Unsupervisied_total_loss / annotated_num / 2, [x / annotated_num / 2 for x in Unsupervisied_stage_loss]
 
-            loss_Rma, each_stage_loss_value_Rma = loss_Rma / annotated_num / 2, [x / annotated_num / 2 for x in
-                                                                     each_stage_loss_value_Rma]
-            Unsupervisied_total_loss_Rma, Unsupervisied_stage_loss_Rma = Unsupervisied_total_loss_Rma / annotated_num / 2, [
-                x / annotated_num / 2 for x in
-                Unsupervisied_stage_loss_Rma]
+            loss_Rma, each_stage_loss_value_Rma = loss_Rma / annotated_num / 2, [x / annotated_num / 2 for x in each_stage_loss_value_Rma]
+            Unsupervisied_total_loss_Rma = Unsupervisied_total_loss_Rma / annotated_num / 2
 
         #Adding SIC , nosecenterHM, Loc regress
         loss = loss + 0.01*loss_SIC + nose_center_hm_loss + 0.1*Loc_loss + Unsupervisied_total_loss
@@ -505,14 +512,14 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         optimizer_Rma.step()
 
         ##teacher secondly update
-        alpha = 0.999
+        alpha = 0.6
         #the detection model
         update_Rma_variables(net, net_Rma, alpha=alpha)
         #the MFEM tracking model
         update_Rma_variables(MFEM, MFEM_Rma, alpha)
 
         ####Student also secondly update
-        beta = 0.999
+        beta = 0.6
         #the detection model
         update_Rma_variables(net_Rma, net, alpha=beta)
         #the MFEM tracking model
@@ -526,24 +533,27 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         # evaluate the training data
         #image_index = image_index.view(-1)
         #nopoints = nopoints.view(-1)
+        #import pdb
+        #pdb.set_trace()
+
         for ibatch, (imgidx, nopoint) in enumerate(zip(image_index, nopoints)):
             for seq_i in range(seq_length):
-                if nopoint[seq_i]==1: continue
-                locations, scores = np_batch_locs[ibatch*seq_length + seq_i, :-1, :], np.expand_dims(np_batch_scos[ibatch*seq_length + seq_i, :-1], -1)
-                xpoints = loader.dataset.labels[imgidx[seq_i]][seq_i].get_points()
-                assert cropped_size[ibatch, 0+seq_i*4] > 0 and cropped_size[
-                    ibatch, 1+seq_i*4] > 0, 'The ibatch={:}, imgidx={:} is not right.'.format(ibatch, imgidx[seq_i],
+                if nopoint==1: continue
+                locations, scores = np_batch_locs[ibatch, :-1, :], np.expand_dims(np_batch_scos[ibatch, :-1], -1)
+                xpoints = loader.dataset.labels[imgidx][seq_i].get_points()
+                assert cropped_size[ibatch, 0] > 0 and cropped_size[
+                    ibatch, 1] > 0, 'The ibatch={:}, imgidx={:} is not right.'.format(ibatch, imgidx,
                                                                                       cropped_size[ibatch])
-                scale_h, scale_w = cropped_size[ibatch, 0+seq_i*4] * 1. / inputs.size(-2), cropped_size[
-                    ibatch, 1+seq_i*4] * 1. / inputs.size(-1)
-                locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[ibatch, 2+seq_i*4], locations[:, 1] * scale_h + cropped_size[ibatch, 3+seq_i*4]
+                scale_h, scale_w = cropped_size[ibatch, 0] * 1. / inputs.size(-2), cropped_size[
+                    ibatch, 1] * 1. / inputs.size(-1)
+                locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[ibatch, 2], locations[:, 1] * scale_h + cropped_size[ibatch, 3]
                 assert xpoints.shape[1] == num_pts and locations.shape[0] == num_pts and scores.shape[
                     0] == num_pts, 'The number of points is {} vs {} vs {} vs {}'.format(num_pts, xpoints.shape,
                                                                                          locations.shape, scores.shape)
                 # recover the original resolution
                 prediction = np.concatenate((locations, scores), axis=1).transpose(1, 0)
-                image_path = loader.dataset.datas[imgidx[seq_i]]
-                face_size = loader.dataset.face_sizes[imgidx[seq_i]]
+                image_path = loader.dataset.datas[imgidx]
+                face_size = loader.dataset.face_sizes[imgidx]
                 eval_meta.append(prediction, xpoints, image_path, face_size)
 
         # measure elapsed time
