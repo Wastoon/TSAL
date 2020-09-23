@@ -12,17 +12,23 @@ from pathlib import Path
 from xvision import Eval_Meta
 from log_utils import AverageMeter, time_for_file, convert_secs2time
 from .losses import compute_stage_loss, show_stage_loss, compute_FCMIL_loss, show_loss, compute_stage_loss_pca, \
-    show_stage_loss_pca, compute_stage_loss_unsupervised
+    show_stage_loss_pca, compute_stage_loss_unsupervised, compute_stage_loss_unsupervised_Loc
 from utils.debugger import Debugger
 from lib.criterion import _sigmoid, FocalLoss, RegLoss, _tranpose_and_gather_feat
 from models.MFDS_model import unFlowLoss
 from easydict import EasyDict
 import json
 import math
+from lib.utils.decode import nosecenter_decode
 
 # train function (forward, backward, update)
 pause = False
 USE_MFEM = True
+
+def update_Rma_variables(model, ema_model, alpha, global_step=0):
+    for ema_param, param in zip(ema_model.parameters(), model.parameters()):
+        ema_param.data.mul_(alpha).add_(1 - alpha, param.data)
+
 
 def rampweight(iteration, total_iteration=150, data_len=3148):
     ramp_up_end = data_len*60
@@ -303,7 +309,6 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
                param.grad.data.mul_(1. / 1024)
             optimizer_MFEM_Rma.step()
 
-
         # switch to train mode
         net.train()
         criterion.train()
@@ -348,12 +353,12 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         data_time.update(time.time() - end)
 
         batch_heatmaps, batch_locs, batch_scos, CLOR_dict = net(inputs)
-        batch_heatmaps_Rma, batch_locs_Rma, batch_scos_Rma, CLOR_dict_Rma = net(inputs)
+        batch_heatmaps_Rma, batch_locs_Rma, batch_scos_Rma, CLOR_dict_Rma = net_Rma(inputs)
 
 
         with torch.no_grad:
             Unsupervisied_traget_batch_heatmaps, Unsupervisied_traget_batch_locs, Unsupervisied_traget_batch__scos, Unsupervisied_traget_CLOR_dict = net(input_from_tracking)
-            Unsupervisied_traget_batch_heatmaps_Rma, Unsupervisied_traget_batch_locs_Rma, Unsupervisied_traget_batch__scos_Rma, Unsupervisied_traget_CLOR_dict_Rma = net_Rma(
+            Unsupervisied_traget_batch_heatmaps_Rma, Unsupervisied_traget_batch_locs_Rma, Unsupervisied_traget_batch_scos_Rma, Unsupervisied_traget_CLOR_dict_Rma = net_Rma(
                 input_from_tracking_Rma)
 
 
@@ -371,7 +376,6 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         Lco_crit = RegLoss()
         Loc_loss += Lco_crit(CLOR_dict['hmhp_offset'],kps_mask,nose_ind,hp_offset_Lco)
 
-        #Loss for Lco regress
         Loc_loss_Rma += Lco_crit(CLOR_dict_Rma['hmhp_offset'],kps_mask,nose_ind,hp_offset_Lco)
 
         #Loss for SIC
@@ -415,19 +419,46 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
 
         forward_time.update(time.time() - end)
 
-        ##Unsupervised_img_loss
+        ##Unsupervised_img_loss_of teacher
         Uncupervised_criterion.train()
         Unsupervisied_total_loss, Unsupervisied_stage_loss = compute_stage_loss_unsupervised(Uncupervised_criterion,
                                                                                              Unsupervisied_traget_batch_heatmaps,
                                                                                              batch_heatmaps, seq_length)
         Unsupervisied_total_loss = weight_decay_unsupervisied * Unsupervisied_total_loss
 
-        Unsupervisied_total_loss_Rma, Unsupervisied_stage_loss_Rma = compute_stage_loss_unsupervised(Uncupervised_criterion,
-                                                                                             Unsupervisied_traget_batch_heatmaps_Rma,
-                                                                                             batch_heatmaps_Rma, seq_length)
+
+        ##Unsupervised_img_loss_of student
+        #1. tracking source info parse----have got batch x 68 x 2
+        video_batch_num = Unsupervisied_traget_batch_locs_Rma.shape[0] // seq_length
+        calculate_loss_id = torch.tensor(
+            [j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)])
+        Unsupervisied_traget_batch_locs_Rma  = Unsupervisied_traget_batch_locs_Rma.index_select(0, calculate_loss_id)  ##(seq_length-1)*9 num_points 2---> 72 x 68 x 2
+        Unsupervisied_traget_batch_locs_Rma = Unsupervisied_traget_batch_locs_Rma.unsqueeze(1).view(Unsupervisied_traget_batch_locs_Rma.shape[0], 1, -1) #---> 72 x 1 x 136
+
+        #2. detection source nose heatmap parse && detection source results combine(center and offset)
+        K = 32
+        Unsupervisied_traget_CLOR_dict_Rma['hm'] = _sigmoid(Unsupervisied_traget_CLOR_dict_Rma['hm'])
+        unsupervisied_target_by_detection = nosecenter_decode(Unsupervisied_traget_CLOR_dict_Rma['hm'] , Unsupervisied_traget_CLOR_dict_Rma['hmhp_offset'], K=K, seq_length=10) ##72 x K x 136
+
+        distance = torch.norm(Unsupervisied_traget_batch_locs_Rma.repeat(1, K, 1)-unsupervisied_target_by_detection, dim=-1)
+        unsupervisied_img_targets_id = torch.argmin(distance, dim=1)
+
+        detection_target_id = []
+        for page_id, offset in enumerate(unsupervisied_img_targets_id):
+            detection_target_id.append(page_id * K + offset.item())
+        detection_target_id = torch.LongTensor(detection_target_id)
+        unsupervisied_target_by_detection = unsupervisied_target_by_detection.view(-1, unsupervisied_target_by_detection.shape[2]).index_select(0, detection_target_id) ## 72 x 136
+
+        #3. student unsupervisied signal fuse
+        Unsupervisied_traget_batch_locs_Rma = Unsupervisied_traget_batch_locs_Rma.squeeze()
+        mu_weight = 0.5
+        Unsupervisied_traget_batch_locs_Rma = mu_weight * Unsupervisied_traget_batch_locs_Rma +(1-mu_weight)*unsupervisied_target_by_detection
+
+        #5. student unsupervisied loss calculate
+        Unsupervisied_total_loss_Rma = compute_stage_loss_unsupervised_Loc(Uncupervised_criterion,
+                                                                           Unsupervisied_traget_batch_locs_Rma,
+                                                                           batch_locs_Rma.view(batch_locs_Rma.shape[0], -1), seq_length)
         Unsupervisied_total_loss_Rma = weight_decay_unsupervisied * Unsupervisied_total_loss_Rma
-
-
 
         # FCMIL_loss = compute_FCMIL_loss(criterion, mask, FC_MIL)
         if np.random.random() < 1:
@@ -468,6 +499,20 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         optimizer_Rma.zero_grad()
         loss_Rma.backward()
         optimizer_Rma.step()
+
+        ##teacher secondly update
+        alpha = 0.999
+        #the detection model
+        update_Rma_variables(net, net_Rma, alpha=alpha)
+        #the MFEM tracking model
+        update_Rma_variables(MFEM, MFEM_Rma, alpha)
+
+        ####Student also secondly update
+        beta = 0.999
+        #the detection model
+        update_Rma_variables(net_Rma, net, alpha=beta)
+        #the MFEM tracking model
+        update_Rma_variables(MFEM_Rma, MFEM, beta)
 
         eval_time.update(time.time() - end)
 

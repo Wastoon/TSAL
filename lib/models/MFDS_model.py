@@ -3,7 +3,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 import json
 from easydict import EasyDict
-from lib.procedure.losses import compute_stage_loss_MFDS
+#from lib.procedure.losses import compute_stage_loss_MFDS
+
+def compute_stage_loss_MFDS(criterion, targets, outputs):
+  assert isinstance(outputs, list), 'The ouputs type is wrong : {:}'.format(type(outputs))
+  assert isinstance(targets, list), 'The ouputs type is wrong : {:}'.format(type(targets))
+  total_loss = 0
+  each_stage_loss = []
+
+  for out, tar in zip(outputs, targets):
+    stage_loss = 0
+    stage_loss = criterion(out, tar)
+    total_loss = total_loss + stage_loss
+    each_stage_loss.append(stage_loss.item())
+  return total_loss, stage_loss
 
 def flow_warp(x, flow12, pad='border', mode='bilinear'):
     B, _, H, W = x.size()

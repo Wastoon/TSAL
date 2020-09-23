@@ -88,8 +88,8 @@ def main(args):
 
     train_data = Dataset(train_transform, args.sigma, model_config.downsample, args.heatmap_type,
                              args.data_indicator, phase='train')
-    import pdb
-    pdb.set_trace()
+    #import pdb
+    #pdb.set_trace()
     train_data.load_list(args.train_lists, args.num_pts, True)
     train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=True,
                                                num_workers=args.workers, pin_memory=True)
@@ -173,6 +173,7 @@ def main(args):
     # net = torch.nn.DataParallel(net)
     resume = False
     last_info = logger.last_info()
+
     if last_info.exists():
         logger.log("=> loading checkpoint of the last-info '{:}' start".format(last_info))
 
@@ -185,11 +186,17 @@ def main(args):
         net.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
+        scheduler_MFEM.load_state_dict(checkpoint['scheduler_MFEM'])
+        MFEM.load_state_dict(checkpoint['MFEM'])
+        optimizer_MFEM.load_state_dict(checkpoint['MFEM_optimizer'])
 
-        student_net.load_state_dict(checkpoint['state_dict_Rma'])
-        Student_optimizer.load_state_dict(checkpoint['optimizer_Rma'])
-        Student_scheduler.load_state_dict(checkpoint['scheduler_Rma'])
-        logger.log("=> load-ok Rma_checkpoint '{:}' (epoch {:}) done".format(logger.last_info(), checkpoint['epoch']))
+        student_net.load_state_dict(checkpoint['state_dict_student'])
+        Student_optimizer.load_state_dict(checkpoint['Student_optimizer'])
+        Student_scheduler.load_state_dict(checkpoint['Student_scheduler'])
+        MFEM_student.load_state_dict(checkpoint['MFEM_student'])
+        Student_optimizer_MFEM.load_state_dict(checkpoint['Student_optimizer_MFEM'])
+        Student_scheduler_MFEM.load_state_dict(checkpoint['Student_scheduler_MFEM'])
+        logger.log("=> load-ok Student_checkpoint '{:}' (epoch {:}) done".format(logger.last_info(), checkpoint['epoch']))
     else:
         logger.log("=> do not find the last-info file : {:}".format(last_info))
         start_epoch = 0
@@ -283,13 +290,15 @@ def main(args):
                 'MFEM' : MFEM.state_dict(),
                 'scheduler': scheduler.state_dict(),
                 'optimizer': optimizer.state_dict(),
+                'scheduler_MFEM':scheduler_MFEM.state_dict(),
                 'MFEM_optimizer':optimizer_MFEM.state_dict(),
-                'state_dict_Rma': student_net.state_dict(),
-                'detector_Rma': student_net.state_dict(),
-                'MFEM_Rma': MFEM_student.state_dict(),
-                'scheduler_Rma': scheduler_MFEM.state_dict(),
-                'optimizer_Rma': optimizer_MFEM.state_dict(),
-                'MFEM_optimizer_Rma': optimizer_MFEM.state_dict()
+                'state_dict_student': student_net.state_dict(),
+                'detector_student': student_net.state_dict(),
+                'MFEM_student': MFEM_student.state_dict(),
+                'Student_scheduler': Student_scheduler.state_dict(),
+                'Student_optimizer': Student_optimizer.state_dict(),
+                'Student_optimizer_MFEM': Student_optimizer_MFEM.state_dict(),
+                'Student_scheduler_MFEM': Student_scheduler_MFEM.state_dict(),
             }, logger.path('model') / '{:}-{:}.pth'.format(model_config.arch, epoch_str), logger)
 
             last_info = save_checkpoint({

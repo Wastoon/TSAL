@@ -1,24 +1,25 @@
 Main Function with logger : Logger(dir=snapshots/debug)
 Arguments : -------------------------------
+Rma_model        : False
 arg_flip         : False
-batch_size       : 1
+batch_size       : 4
 crop_height      : 256
 crop_perturb_max : 30
 crop_width       : 256
 data_indicator   : 300W-68
 error_bar        : None
-eval_ilists      : ['/home/mry/PycharmProjects/SALD/cache_data/lists/300W/300w.test.challenge.DET']
+eval_ilists      : ['./cache_data/lists/300W/300w.test.full.DET']
 eval_once        : False
 eval_vlists      : None
 heatmap_type     : gaussian
 load_test_model  : None
 model_config     : ./configs/Detector.config
 num_pts          : 68
-opt_config       : ./configs/optimizer.config
+opt_config       : ./configs/SGD.config
 pre_crop_expand  : 0.2
 print_freq       : 100
 pyramid_input    : True
-rand_seed        : 34216
+rand_seed        : 85983
 rotate_max       : 20
 save_path        : ./snapshots/debug
 scale_eval       : 1.0
@@ -26,14 +27,14 @@ scale_max        : 1.1
 scale_min        : 0.9
 scale_prob       : 1.0
 sigma            : 4.0
-train_lists      : ['/home/mry/PycharmProjects/SALD/cache_data/lists/300W/300w.test.challenge.DET']
+train_lists      : ['./cache_data/lists/300W/300w.train.DET']
 usefocalloss     : False
 usepca           : False
 workers          : 8
-Python  version : 3.6.7 | packaged by conda-forge | (default, Nov  6 2019, 16:19:42)  [GCC 7.3.0]
-Pillow  version : 7.0.0
-PyTorch version : 1.4.0
-cuDNN   version : 7603
+Python  version : 3.6.3 | packaged by conda-forge | (default, Nov  4 2017, 10:10:56)  [GCC 4.8.2 20140120 (Red Hat 4.8.2-15)]
+Pillow  version : 6.2.1
+PyTorch version : 1.2.0
+cuDNN   version : 7602
 ./configs/Detector.config
 Configure(arch='cpm_vgg16', stages=3, dilation=[1], pooling=[True, True, True], downsample=8, argmax=4, pretrained=[True])
 Real Sigma : 4.0
@@ -239,102 +240,3 @@ configure : Configure(arch='cpm_vgg16', stages=3, dilation=[1], pooling=[True, T
     (2): Conv2d(128, 136, kernel_size=(1, 1), stride=(1, 1))
   )
 )
-Training-data : GeneralDataset(point-num=68, sigma=4.0, heatmap_type=gaussian, length=1350, dataset=300W-68)
-The [ 0/ 1]-th testing-data [image] = GeneralDataset(point-num=68, sigma=4.0, heatmap_type=gaussian, length=1350, dataset=300W-68)
-arguments : Namespace(arg_flip=False, batch_size=1, crop_height=256, crop_perturb_max=30, crop_width=256, data_indicator='300W-68', error_bar=None, eval_ilists=['/home/mry/PycharmProjects/SALD/cache_data/lists/300W/300w.test.challenge.DET'], eval_once=False, eval_vlists=None, heatmap_type='gaussian', load_test_model=None, model_config='./configs/Detector.config', num_pts=68, opt_config='./configs/optimizer.config', pre_crop_expand=0.2, print_freq=100, pyramid_input=True, rand_seed=34216, rotate_max=20, save_path='./snapshots/debug', scale_eval=1.0, scale_max=1.1, scale_min=0.9, scale_prob=1.0, sigma=4.0, train_lists=['/home/mry/PycharmProjects/SALD/cache_data/lists/300W/300w.test.challenge.DET'], usefocalloss=False, usepca=False, workers=8)
-./configs/optimizer.config
-Configure(optimizer='Adam', LR=5e-05, momentum=0.9, Decay=0.0005, nesterov=True, criterion='MSE-none', loss_norm=True, lossnorm=True, epochs=150, schedule=[90, 110, 130], gamma=0.5, stages=1)
-Optimizer : Adam (
-Parameter Group 0
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 5e-05
-    lr: 5e-05
-    weight_decay: 0
-), MSE Loss with size-average=False
-Optimizer : Adam (
-Parameter Group 0
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 5e-05
-    lr: 5e-05
-    weight_decay: 0.0005
-
-Parameter Group 1
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0001
-    lr: 0.0001
-    weight_decay: 0
-
-Parameter Group 2
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 5e-05
-    lr: 5e-05
-    weight_decay: 0.0005
-
-Parameter Group 3
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0001
-    lr: 0.0001
-    weight_decay: 0
-
-Parameter Group 4
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0002
-    lr: 0.0002
-    weight_decay: 0.0005
-
-Parameter Group 5
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0004
-    lr: 0.0004
-    weight_decay: 0
-
-Parameter Group 6
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0002
-    lr: 0.0002
-    weight_decay: 0.0005
-
-Parameter Group 7
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0004
-    lr: 0.0004
-    weight_decay: 0
-
-Parameter Group 8
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0002
-    lr: 0.0002
-    weight_decay: 0.0005
-
-Parameter Group 9
-    amsgrad: False
-    betas: (0.9, 0.999)
-    eps: 1e-08
-    initial_lr: 0.0004
-    lr: 0.0004
-    weight_decay: 0
-), MSE Loss with size-average=False
-criterion : MSELoss()
-=> do not find the last-info file : snapshots/debug/last-info_real.pth
-
-==>>[2020-08-30 12:05:52] [epoch-000-150], [[Time Left: 00:00:00]], LR : [0.00005 ~ 0.00040], Config : Configure(optimizer='Adam', LR=5e-05, momentum=0.9, Decay=0.0005, nesterov=True, criterion='MSE-none', loss_norm=True, lossnorm=True, epochs=150, schedule=[90, 110, 130], gamma=0.5, stages=1)

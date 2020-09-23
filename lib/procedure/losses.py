@@ -41,6 +41,17 @@ def compute_stage_loss_unsupervised(criterion, targets, outputs, seq_length):
     each_stage_loss.append(stage_loss.item())
   return total_loss, stage_loss
 
+def compute_stage_loss_unsupervised_Loc(criterion, targets, outputs, seq_length):
+  assert isinstance(outputs, list), 'The ouputs type is wrong : {:}'.format(type(outputs))
+  total_loss = 0
+
+  video_batch_num = outputs.shape[0] // seq_length
+  calculate_loss_id = torch.tensor([j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)])
+
+  outputs = outputs.index_select(0, calculate_loss_id)
+  total_loss = criterion(outputs, targets)
+  return total_loss
+
 
 def compute_stage_loss_MFDS(criterion, targets, outputs):
   assert isinstance(outputs, list), 'The ouputs type is wrong : {:}'.format(type(outputs))
