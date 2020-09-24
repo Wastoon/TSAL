@@ -44,10 +44,26 @@ def basic_eval(args, loader, net, criterion, epoch_str, logger, opt_config):
     criterion.eval()
 
     end = time.time()
-    for i, (inputs, target, mask, points, image_index, nopoints, cropped_size) in enumerate(loader):
+    for i, (inputs, target, mask, points, image_index, nopoints, cropped_size, nose_center_hm, hp_offset_Lco, kps_mask, nose_ind) in enumerate(loader):
         # inputs : Batch, Channel, Height, Width
-
+        seq_length = inputs.shape[1] // 3
+        inputs = inputs.view(-1, 3, inputs.shape[2], inputs.shape[3])
         target = target.cuda(non_blocking=True)
+        target = target.view(-1, args.num_pts + 1, target.shape[2], target.shape[3])
+        mask = mask.view(-1, args.num_pts + 1, mask.shape[2], mask.shape[3])
+        points = points.view(-1, args.num_pts, points.shape[2])
+        image_index = image_index.view(-1, 1)
+        nopoints = nopoints.view(-1, 1)
+        cropped_size = cropped_size.view(-1, 4)
+
+        nose_center_hm = nose_center_hm.view(-1, nose_center_hm.shape[2], nose_center_hm.shape[2])
+        # hp_offset_Lco = torch.from_numpy(hp_offset_Lco)
+        hp_offset_Lco = hp_offset_Lco.view(-1, 32, hp_offset_Lco.shape[2])
+        # kps_mask = torch.from_numpy(kps_mask)
+        kps_mask = kps_mask.view(-1, 32, hp_offset_Lco.shape[2])
+        # nose_ind = torch.from_numpy(nose_ind)
+        nose_ind = nose_ind.view(-1, 32)
+
 
         image_index = image_index.numpy().squeeze(1).tolist()
         batch_size, num_pts = inputs.size(0), args.num_pts
@@ -58,6 +74,10 @@ def basic_eval(args, loader, net, criterion, epoch_str, logger, opt_config):
 
         # measure data loading time
         mask = mask.cuda(non_blocking=True)
+        nose_center_hm = nose_center_hm.cuda()
+        kps_mask = kps_mask.cuda()
+        nose_ind = nose_ind.cuda()
+        hp_offset_Lco = hp_offset_Lco.cuda()
         # heatmap_pca_weight = heatmap_pca_weight.cuda(non_blocking=True)
         data_time.update(time.time() - end)
 
@@ -65,39 +85,16 @@ def basic_eval(args, loader, net, criterion, epoch_str, logger, opt_config):
         batch_heatmaps, batch_locs, batch_scos = net(inputs)
         forward_time.update(time.time() - end)
 
-        FC_MIL_criterion = torch.nn.BCEWithLogitsLoss()
-        FC_MIL_criterion.cuda()
-        FC_MIL_criterion.train()
         if annotated_num > 0:
-            # FCMIL_loss = compute_FCMIL_loss(FC_MIL_criterion, mask, FC_MIL)
-            # fake_mask = FC_MIL.detach().clone().unsqueeze(2).unsqueeze(3)
 
-            if args.usefocalloss:
-                loss = 0
-                each_stage_loss_value = []
-                for i in range(opt_config.stages):
-                    heatmap = batch_heatmaps[i]
-                    loss_stage_i = criterion(heatmap, target)
-                    each_stage_loss_value.append(loss_stage_i.item())
-                    loss = loss + loss_stage_i
-            else:
-                loss, each_stage_loss_value = compute_stage_loss(criterion, target, batch_heatmaps, mask)
-
-            # loss, each_stage_loss_value = compute_stage_loss(criterion, target, batch_heatmaps, mask)
-            # loss_pca, each_stage_loss_value_pca = compute_stage_loss_pca(criterion, heatmap_pca_weight, pca_weight)
-            # loss = loss + loss_pca*(1e-7)
+            loss, each_stage_loss_value = compute_stage_loss(criterion, target, batch_heatmaps, mask)
 
             # loss, each_stage_loss_value = compute_stage_loss(criterion, target, batch_heatmaps, mask)
             if opt_config.lossnorm:
-                if not args.usepca:
-                    loss, each_stage_loss_value = loss / annotated_num, [x / annotated_num for x in
-                                                                         each_stage_loss_value]
-                else:
-                    loss, each_stage_loss_value, each_stage_loss_value_pca = loss / annotated_num / 2, [
-                        x / annotated_num / 2 for x in each_stage_loss_value], [x / annotated_num / 2 * (1e-7) for x in
-                                                                                each_stage_loss_value_pca]
+                loss, each_stage_loss_value, each_stage_loss_value_pca = loss / annotated_num / 2, [
+                    x / annotated_num / 2 for x in each_stage_loss_value], [x / annotated_num / 2 * (1e-7) for x in
+                                                                            each_stage_loss_value_pca]
             each_stage_loss_value = show_stage_loss(each_stage_loss_value)
-            # loss = loss + FCMIL_loss*2
             # measure accuracy and record loss
             losses.update(loss.item(), batch_size)
         else:
@@ -110,29 +107,26 @@ def basic_eval(args, loader, net, criterion, epoch_str, logger, opt_config):
         # evaluate the training data
         for ibatch, (imgidx, nopoint) in enumerate(zip(image_index, nopoints)):
             # if nopoint == 1: continue
-            if args.usefocalloss:
-                locations, scores = np_batch_locs[ibatch, :, :], np.expand_dims(np_batch_scos[ibatch, :], -1)
-            else:
-                locations, scores = np_batch_locs[ibatch, :-1, :], np.expand_dims(np_batch_scos[ibatch, :-1], -1)
-            xpoints = loader.dataset.labels[imgidx].get_points()
-            assert cropped_size[ibatch, 0] > 0 and cropped_size[
-                ibatch, 1] > 0, 'The ibatch={:}, imgidx={:} is not right.'.format(ibatch, imgidx, cropped_size[ibatch])
-            scale_h, scale_w = cropped_size[ibatch, 0] * 1. / inputs.size(-2), cropped_size[
-                ibatch, 1] * 1. / inputs.size(-1)
-            locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[ibatch, 2], locations[:,
-                                                                                                    1] * scale_h + \
-                                               cropped_size[ibatch, 3]
-            assert xpoints.shape[1] == num_pts and locations.shape[0] == num_pts and scores.shape[
-                0] == num_pts, 'The number of points is {} vs {} vs {} vs {}'.format(num_pts, xpoints.shape,
-                                                                                     locations.shape, scores.shape)
-            # recover the original resolution
-            prediction = np.concatenate((locations, scores), axis=1).transpose(1, 0)
-            image_path = loader.dataset.datas[imgidx]
-            face_size = loader.dataset.face_sizes[imgidx]
-            if nopoint == 1:
-                eval_meta.append(prediction, None, image_path, face_size)
-            else:
-                eval_meta.append(prediction, xpoints, image_path, face_size)
+            locations, scores = np_batch_locs[ibatch, :-1, :], np.expand_dims(np_batch_scos[ibatch, :-1], -1)
+            for seq_i in range(seq_length):
+                xpoints = loader.dataset.labels[imgidx][seq_i].get_points()
+
+                scale_h, scale_w = cropped_size[ibatch, 0] * 1. / inputs.size(-2), cropped_size[
+                    ibatch, 1] * 1. / inputs.size(-1)
+                locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[ibatch, 2], locations[:,
+                                                                                                        1] * scale_h + \
+                                                   cropped_size[ibatch, 3]
+                assert xpoints.shape[1] == num_pts and locations.shape[0] == num_pts and scores.shape[
+                    0] == num_pts, 'The number of points is {} vs {} vs {} vs {}'.format(num_pts, xpoints.shape,
+                                                                                         locations.shape, scores.shape)
+                # recover the original resolution
+                prediction = np.concatenate((locations, scores), axis=1).transpose(1, 0)
+                image_path = loader.dataset.datas[imgidx]
+                face_size = loader.dataset.face_sizes[imgidx]
+                if nopoint == 1:
+                    eval_meta.append(prediction, None, image_path, face_size)
+                else:
+                    eval_meta.append(prediction, xpoints, image_path, face_size)
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -140,14 +134,15 @@ def basic_eval(args, loader, net, criterion, epoch_str, logger, opt_config):
         end = time.time()
 
         if i % (args.print_freq) == 0 or i + 1 == len(loader):
-            logger.log(' -->>[Eval]: [{:}][{:03d}/{:03d}] '
+            logger.log(' -->>[Train]: [{:}][{:03d}/{:03d}] '
                        'Time {batch_time.val:4.2f} ({batch_time.avg:4.2f}) '
                        'Data {data_time.val:4.2f} ({data_time.avg:4.2f}) '
                        'Forward {forward_time.val:4.2f} ({forward_time.avg:4.2f}) '
                        'Loss {loss.val:7.4f} ({loss.avg:7.4f})  '.format(
                 epoch_str, i, len(loader), batch_time=batch_time,
                 data_time=data_time, forward_time=forward_time, loss=losses)
-                       + last_time + each_stage_loss_value \
+                       + last_time + show_stage_loss(each_stage_loss_value) \
                        + ' In={:} Tar={:}'.format(list(inputs.size()), list(target.size())) \
-                       + ' Vis-PTS : {:2d} ({:.1f})'.format(int(visible_points.val), visible_points.avg))
+                       + ' Vis-PTS : {:2d} ({:.1f})'.format(int(visible_points.val), visible_points.avg)
+                       )
     return losses.avg, eval_meta

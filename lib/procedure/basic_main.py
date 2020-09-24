@@ -554,27 +554,6 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
         #nopoints = nopoints.view(-1)
         #import pdb
         #pdb.set_trace()
-
-        for ibatch, (imgidx, nopoint) in enumerate(zip(image_index, nopoints)):
-            for seq_i in range(seq_length):
-                if nopoint==1: continue
-                locations, scores = np_batch_locs[ibatch, :-1, :], np.expand_dims(np_batch_scos[ibatch, :-1], -1)
-                xpoints = loader.dataset.labels[imgidx][seq_i].get_points()
-                assert cropped_size[ibatch, 0] > 0 and cropped_size[
-                    ibatch, 1] > 0, 'The ibatch={:}, imgidx={:} is not right.'.format(ibatch, imgidx,
-                                                                                      cropped_size[ibatch])
-                scale_h, scale_w = cropped_size[ibatch, 0] * 1. / inputs.size(-2), cropped_size[
-                    ibatch, 1] * 1. / inputs.size(-1)
-                locations[:, 0], locations[:, 1] = locations[:, 0] * scale_w + cropped_size[ibatch, 2], locations[:, 1] * scale_h + cropped_size[ibatch, 3]
-                assert xpoints.shape[1] == num_pts and locations.shape[0] == num_pts and scores.shape[
-                    0] == num_pts, 'The number of points is {} vs {} vs {} vs {}'.format(num_pts, xpoints.shape,
-                                                                                         locations.shape, scores.shape)
-                # recover the original resolution
-                prediction = np.concatenate((locations, scores), axis=1).transpose(1, 0)
-                image_path = loader.dataset.datas[imgidx]
-                face_size = loader.dataset.face_sizes[imgidx]
-                eval_meta.append(prediction, xpoints, image_path, face_size)
-
         for ibatch, (imgidx, nopoint) in enumerate(zip(image_index, nopoints)):
             if nopoint==1: continue
             locations, scores = np_batch_locs[ibatch, :-1, :], np.expand_dims(np_batch_scos[ibatch, :-1], -1)
