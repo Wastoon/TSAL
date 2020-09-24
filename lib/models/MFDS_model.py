@@ -647,6 +647,33 @@ class MFDS(nn.Module):
             raise NotImplementedError
         return res_dict
 
+def model_init(MFEM, model_path):
+    def load_checkpoint(model_path):
+        weights = torch.load(model_path)
+        epoch = None
+        if 'epoch' in weights:
+            epoch = weights.pop('epoch')
+        if 'state_dict' in weights:
+            state_dict = (weights['state_dict'])
+        else:
+            state_dict = weights
+        return epoch, state_dict
+
+    epoch, weights = load_checkpoint(model_path)
+    from collections import OrderedDict
+    new_weights = OrderedDict()
+    model_keys = list(MFEM.state_dict().keys())
+    weight_keys = list(weights.keys())
+    for a, b in zip(model_keys, weight_keys):
+        new_weights[a] = weights[b]
+    weights = new_weights
+    MFEM.load_state_dict(weights)
+    return MFEM
+
+
+    pass
+
+
 if __name__=='__main__':
     with open('/home/mry/PycharmProjects/SALD/configs/MFDS.json') as f:
         cfg = EasyDict(json.load(f))

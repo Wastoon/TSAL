@@ -28,9 +28,10 @@ from models import obtain_model
 from optimizer import obtain_optimizer
 from lib.criterion import FocalLoss
 from utils.load_model import load_model
-from models.MFDS_model import MFDS
+from models.MFDS_model import MFDS, model_init
 from easydict import EasyDict
 import json
+
 
 def update_ema_variables(model, ema_model, alpha, global_step=0):
     for ema_param, param in zip(ema_model.parameters(), model.parameters()):
@@ -128,6 +129,8 @@ def main(args):
     # Define Montion fiels estimation module
     cfg_MFEM = EasyDict(json.load(open('/home/mry/PycharmProjects/SALD/configs/MFDS.json')))
     MFEM = MFDS(cfg_MFEM)
+    init_model_path = '/data1/mry/code/SALD/folwweight/MFEM.tar'
+    MFEM = model_init(MFEM, init_model_path)
 
     for i, eval_loader in enumerate(eval_loaders):
         eval_loader, is_video = eval_loader
@@ -154,6 +157,8 @@ def main(args):
         student_net = obtain_model(model_config, args.num_pts + 1)
         logger.log("=>Student network :\n {}".format(student_net))
         MFEM_student = MFDS(cfg_MFEM)
+        init_model_path = '/data1/mry/code/SALD/folwweight/MFEM_student.tar'
+        MFEM_student = model_init(MFEM_student, init_model_path)
 
         if hasattr(student_net, 'specify_parameter'):
             Student_net_param_dict = student_net.specify_parameter(opt_config.LR, opt_config.Decay)

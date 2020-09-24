@@ -67,9 +67,15 @@ def nosecenter_decode(
         heat, kps, reg=None, hm_hp=None, hp_offset=None, K=100, seq_length=10):
     batch, cat, height, width = heat.size()
     num_joints = kps.shape[1] // 2
+#<<<<<<< Updated upstream
     #video_batch_num = batch // (seq_length-1)
     #calculate_loss_id = torch.tensor(
     #    [j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)]).cuda()
+#=======
+    video_batch_num = batch // seq_length
+    calculate_loss_id = torch.tensor(
+        [j * seq_length + i for j in range(video_batch_num) for i in range(seq_length - 1)]).cuda()
+#>>>>>>> Stashed changes
     # heat = torch.sigmoid(heat)
     # perform nms on heatmaps
     heat = _nms(heat)
