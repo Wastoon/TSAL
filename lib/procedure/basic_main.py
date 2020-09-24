@@ -84,7 +84,7 @@ def basic_train(args, loader, net, MFEM, criterion, optimizer, optimizer_MFEM, e
                cfg = EasyDict(json.load(open('/home/mry/PycharmProjects/SALD/configs/MFDS.json')))
                cfg = cfg.loss
                loss_func = unFlowLoss(cfg, net)
-               loss_interframe, l_ph, l_sm, flow_mean, FW_consistency_loss, BW_consistency_loss, unsupervisied_target_by_tracking = loss_func(flows, inputs[:,i*3:i*3+6,:,:])
+               loss_interframe, l_ph, l_sm, flow_mean, FW_consistency_loss, BW_consistency_loss, unsupervisied_target_by_tracking = loss_func(flows, inputs[:,j*3:j*3+6,:,:])
                tracking_source_reconsimg_list.append(unsupervisied_target_by_tracking)
                loss_MFEM += loss_interframe
                MFDS_consistency_loss += FW_consistency_loss + BW_consistency_loss
@@ -274,7 +274,7 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
                cfg = EasyDict(json.load(open('/home/mry/PycharmProjects/SALD/configs/MFDS.json')))
                cfg = cfg.loss
                loss_func = unFlowLoss(cfg, net)
-               loss_interframe, l_ph, l_sm, flow_mean, FW_consistency_loss, BW_consistency_loss, unsupervisied_target_by_tracking = loss_func(flows, inputs[:,i*3:i*3+6,:,:])
+               loss_interframe, l_ph, l_sm, flow_mean, FW_consistency_loss, BW_consistency_loss, unsupervisied_target_by_tracking = loss_func(flows, inputs[:,j*3:j*3+6,:,:])
                tracking_source_reconsimg_list.append(unsupervisied_target_by_tracking)
                loss_MFEM += loss_interframe
                MFDS_consistency_loss += FW_consistency_loss + BW_consistency_loss
@@ -298,7 +298,7 @@ def basic_train_Rma_model(args, loader, net, MFEM, net_Rma, MFEM_Rma, criterion,
                cfg = EasyDict(json.load(open('/home/mry/PycharmProjects/SALD/configs/MFDS.json')))
                cfg = cfg.loss
                loss_func = unFlowLoss(cfg, net_Rma)
-               loss_interframe_Rma, l_ph_Rma, l_sm_Rma, flow_mean_Rma, FW_consistency_loss_Rma, BW_consistency_loss_Rma, unsupervisied_target_by_tracking_Rma = loss_func(flows, inputs[:,i*3:i*3+6,:,:])
+               loss_interframe_Rma, l_ph_Rma, l_sm_Rma, flow_mean_Rma, FW_consistency_loss_Rma, BW_consistency_loss_Rma, unsupervisied_target_by_tracking_Rma = loss_func(flows, inputs[:,j*3:j*3+6,:,:])
                tracking_source_reconsimg_Rma_list.append(unsupervisied_target_by_tracking_Rma)
                loss_MFEM_Rma += loss_interframe_Rma
                MFDS_consistency_loss_Rma += FW_consistency_loss_Rma + BW_consistency_loss_Rma
