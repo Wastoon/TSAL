@@ -1,7 +1,4 @@
 # Dataset Preparation
-The raw dataset should be put into the `$HOME/datasets/landmark-datasets`. The layout should be organized as the following screen shot.
-
-![layout](https://github.com/facebookresearch/supervision-by-registration/blob/master/cache_data/cache/dir-layout.png)
 
 ## [300-W](https://ibug.doc.ic.ac.uk/resources/300-W/)
 
