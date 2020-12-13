@@ -80,7 +80,7 @@ CUDA_VISIBLE_DEVICES=2 python ./exps/main.py \
 
 ## Demo
 
-After train the dual-model, you can fetch the similar results of teacher model and student model just like ==Youtube link== and ==Youtube link==.
+After train the dual-model, you can fetch the similar results of teacher model and student model just like [Teacher](https://youtu.be/HwdoKyxuHsk) and [Student](https://youtu.be/dDgJbw-J-gc) here. 
 
 ## License
 
