@@ -99,7 +99,7 @@ If you find this project useful for your research, please use the following BibT
 @inproceedings{TSAL_MRY,
   title={Teacher-Student Asynchronous Learning with Multi-Source Consistency for Facial Landmark Detection},
   author={MengRongye, ZhouSanping, WangJinjun},
-  booktitle={},
+  booktitle={https://arxiv.org/abs/2012.06711},
   year={2020}
 }
 ```
