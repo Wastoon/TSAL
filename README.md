@@ -1,4 +1,4 @@
-# Teacher-Student Asynchronous Learning with Multi-Source Consistency for Facial Landmark Detection
+# [Teacher-Student Asynchronous Learning with Multi-Source Consistency for Facial Landmark Detection]:(https://arxiv.org/abs/2012.06711)
 
 ## Introduction
 The high cost of labeling key points on the face in the video has attracted wide attention from researchers.Existing methods based on semi-supervised learning are dedicated to mining high-quality pseudo-labels and let them continue to participate in training.This self-training method is highly dependent on the quality and quantity of the added pseudo-labels. Therefore, we propose a teacher-student asynchronous learning~(TSAL) framework based on mining the consistency of multi-source supervisied signals instead of simply voting. During the training process, TSAL focuses on mining the commonality and specificity between different forms of pseudo-labels under the same task, which produces more reliable pseudo-labels for unlabeled data and boost the performance of self-training. 
